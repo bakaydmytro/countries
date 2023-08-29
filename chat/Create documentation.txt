@@ -1,0 +1,184 @@
+User
+@RestController
+public class CountriesController {
+
+    private static final String REST_COUNTRIES_URL = "https://restcountries.com/v3.1/all";
+    @Autowired
+    private CountryMapper countryMapper;
+
+    @Autowired
+    private CountriesService countriesService;
+
+
+    @GetMapping("/countries")
+    public List<CountryDTO> myEndpoint(
+            @RequestParam(required = false) String countryName,
+            @RequestParam(required = false) Integer populationThreshold,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer limit
+    ) throws IOException {
+        String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
+        List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
+
+        if (countryName != null && !countryName.isEmpty()) {
+            countryInfoDTO = countriesService.filterCountriesByName(countryInfoDTO, countryName);
+        }
+
+        if (populationThreshold != null) {
+            countryInfoDTO = countriesService.filterCountriesByPopulation(countryInfoDTO, populationThreshold);
+        }
+
+        if (sort != null) {
+            countryInfoDTO = countriesService.sortCountriesByName(countryInfoDTO, sort);
+        }
+
+        if (limit != null && limit > 0) {
+            countryInfoDTO = countriesService.applyCountryLimit(countryInfoDTO, limit);
+        }
+
+        return countryInfoDTO;
+    }
+}
+
+@Service
+public class CountriesServiceImpl implements CountriesService {
+
+
+    @Override
+    public List<CountryDTO> filterCountriesByName(List<CountryDTO> countries, String filter) {
+        return countries.stream()
+                .filter(country -> country.getName() != null && country.getName().getCommon() != null &&
+                        country.getName().getCommon().toLowerCase().contains(filter.toLowerCase()))
+                .toList();
+
+    }
+
+
+    public List<CountryDTO> filterCountriesByPopulation(List<CountryDTO> countries, Integer populationThreshold) {
+        List<CountryDTO> filteredCountries = new ArrayList<>();
+
+        for (CountryDTO country : countries) {
+            if (country.getPopulation() < populationThreshold * 1000000) {
+                filteredCountries.add(country);
+            }
+        }
+
+        return filteredCountries;
+    }
+
+    @Override
+    public List<CountryDTO> sortCountriesByName(List<CountryDTO> countryList, String sortOrder) {
+        Comparator<CountryDTO> comparator = (country1, country2) -> {
+            String name1 = country1.getName().getCommon();
+            String name2 = country2.getName().getCommon();
+
+            if ("ascend".equalsIgnoreCase(sortOrder)) {
+                return name1.compareTo(name2);
+            } else if ("descend".equalsIgnoreCase(sortOrder)) {
+                return name2.compareTo(name1);
+            } else {
+                throw new IllegalArgumentException("Invalid sort order. Use 'ascend' or 'descend'.");
+            }
+        };
+
+        List<CountryDTO> sortedList = new ArrayList<>(countryList);
+        sortedList.sort(comparator);
+
+        return sortedList;
+    }
+
+    @Override
+    public List<CountryDTO> applyCountryLimit(List<CountryDTO> countries, int limit) {
+        return countries.subList(0, Math.min(limit, countries.size()));
+    }
+}
+
+TASK: Update Readme.md with  
+
+Application description: 2 paragraphs, 4-10 Sentences. 
+
+Information on how to run the developed application locally. 
+
+At least 10 examples of how to use the developed endpoint. 
+
+ChatGPT
+Application Description:
+
+The Countries Information REST API is a versatile tool designed to provide users with detailed insights into countries around the world. This application offers a streamlined interface to access a wide range of country-related data, leveraging the REST Countries API as its primary data source. With a plethora of filtering, sorting, and limiting options, users can tailor their queries to obtain specific information about countries based on their names, populations, and more. The application's design follows a modular structure, promoting maintainability and extensibility. By utilizing Spring Boot and Java, the backend efficiently handles requests and responses, while the intuitive API design ensures an effortless experience for both developers and end-users.
+
+Running the Application Locally:
+
+To run the Countries Information API locally, follow these steps:
+
+Clone the repository from [GitHub repository link].
+Ensure you have Java and Maven installed on your system.
+Open a terminal and navigate to the project's root directory.
+Run the command: mvn spring-boot:run
+The application will start, and you can access it at http://localhost:8080.
+Examples of Using the Endpoint:
+
+Retrieve information about all countries: GET /countries
+Filter countries by name: GET /countries?countryName=United
+Filter countries by population under 50 million: GET /countries?populationThreshold=50
+Sort countries in ascending order: GET /countries?sort=ascend
+Sort countries in descending order: GET /countries?sort=descend
+Limit results to 10 countries: GET /countries?limit=10
+Combine filters: GET /countries?countryName=China&populationThreshold=100&sort=ascend&limit=5
+Case-insensitive name filter: GET /countries?countryName=germany
+Find countries with populations under 20 million and sort descending: GET /countries?populationThreshold=20&sort=descend
+Retrieve a specific number of countries: GET /countries?limit=3
+Get countries with names containing "island": GET /countries?countryName=island
+Filter by population and sort results: GET /countries?populationThreshold=10&sort=ascend
+Feel free to experiment with different combinations of filters, sorting options, and limiting parameters to customize the output according to your preferences. The Countries Information API offers a comprehensive solution to explore global country data efficiently.
+
+
+
+
+User
+can use send me text for readme?
+ChatGPT
+Certainly! Here's the text you can include in your README.md file:
+
+markdown
+Copy code
+# Countries Information REST API
+
+Welcome to the Countries Information REST API! This application provides an easy-to-use interface for accessing a wealth of information about countries from around the world. Leveraging the REST Countries API as its primary data source, this API offers powerful features for filtering, sorting, and limiting country data. Built using Spring Boot and Java, the backend ensures efficient handling of requests and responses while maintaining a user-friendly experience.
+
+## Getting Started
+
+To run the Countries Information API locally, follow these steps:
+
+1. Clone this repository: `git clone [repository link]`
+2. Ensure you have Java and Maven installed on your system.
+3. Navigate to the project's root directory in your terminal.
+4. Run the command: `mvn spring-boot:run`
+5. Access the API at: `http://localhost:8080`
+
+## Example Usage
+
+Explore the capabilities of the API with these example queries:
+
+1. Retrieve information about all countries: `GET /countries`
+2. Filter countries by name: `GET /countries?countryName=United`
+3. Filter countries by population under 50 million: `GET /countries?populationThreshold=50`
+4. Sort countries in ascending order: `GET /countries?sort=ascend`
+5. Sort countries in descending order: `GET /countries?sort=descend`
+6. Limit results to 10 countries: `GET /countries?limit=10`
+7. Combine filters: `GET /countries?countryName=China&populationThreshold=100&sort=ascend&limit=5`
+8. Case-insensitive name filter: `GET /countries?countryName=germany`
+9. Find countries with populations under 20 million and sort descending: `GET /countries?populationThreshold=20&sort=descend`
+10. Retrieve a specific number of countries: `GET /countries?limit=3`
+11. Get countries with names containing "island": `GET /countries?countryName=island`
+12. Filter by population and sort results: `GET /countries?populationThreshold=10&sort=ascend`
+
+Feel free to customize your queries by combining filters and sorting options to obtain the specific country information you're looking for.
+
+## Contributing
+
+We welcome contributions to enhance the features and usability of the API. Please open an issue to discuss potential changes or submit a pull request for review.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+Remember to replace [repository link] with the actual link to your GitHub repository. This template provides an overview of your application, how to run it, and examples of using the provided endpoint. Make sure to include any additional information or instructions specific to your project.

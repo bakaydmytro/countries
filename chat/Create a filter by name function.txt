@@ -1,0 +1,252 @@
+User
+    @GetMapping("/countries")
+    public List<CountryDTO> myEndpoint(
+            @RequestParam(required = false) String countryName,
+            @RequestParam(required = false) String param2,
+            @RequestParam(required = false) String param3,
+            @RequestParam(required = false) String param4
+    ) throws IOException {
+        String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
+        List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
+        return countryInfoDTO;
+    }
+}
+
+
+@Data
+public class CountryName {
+    private String common;
+}
+
+@Data
+public class CountryDTO {
+    private CountryName name;
+    private List<String> capital;
+    private String region;
+    private String subregion;
+    private int population;
+    private String flag;
+}
+
+Task: Create a function that accepts a string as a parameter and can filter by country `name/common`.  
+
+The filter should search for countries names that contains string from attributes (e.g., providing `st` as attribute I could find `Estonia`, providing `Sp` I could find `Spain`) 
+
+ChatGPT
+Sure, to create a function that filters the list of CountryDTO objects by country name, you can modify your existing myEndpoint method like this:
+
+java
+Copy code
+import org.springframework.util.StringUtils;
+
+@GetMapping("/countries")
+public List<CountryDTO> myEndpoint(
+        @RequestParam(required = false) String countryName,
+        @RequestParam(required = false) String param2,
+        @RequestParam(required = false) String param3,
+        @RequestParam(required = false) String param4
+) throws IOException {
+    String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
+    List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
+
+    if (!StringUtils.isEmpty(countryName)) {
+        countryInfoDTO = filterCountriesByName(countryInfoDTO, countryName);
+    }
+
+    return countryInfoDTO;
+}
+
+private List<CountryDTO> filterCountriesByName(List<CountryDTO> countries, String filter) {
+    List<CountryDTO> filteredCountries = new ArrayList<>();
+
+    for (CountryDTO country : countries) {
+        if (country.getName() != null && country.getName().getCommon() != null &&
+            country.getName().getCommon().toLowerCase().contains(filter.toLowerCase())) {
+            filteredCountries.add(country);
+        }
+    }
+
+    return filteredCountries;
+}
+In this modified code, if the countryName parameter is provided in the request, the function calls the filterCountriesByName function to filter the list of countries by the provided name. The filterCountriesByName function iterates through the list of countries, checks if the country's common name contains the provided filter (case-insensitive), and adds it to the filtered list if it matches.
+
+Please note that I've used the StringUtils.isEmpty method from the Spring framework to check for null or empty values. Make sure you have the necessary imports for the Spring framework classes.
+
+Also, make sure to handle any necessary exceptions and imports in your actual code environment.
+
+
+
+
+User
+can we use streams?
+ChatGPT
+Certainly! You can use Java streams to achieve the same filtering functionality in a more concise way. Here's how you could modify the code to use streams:
+
+java
+Copy code
+import org.springframework.util.StringUtils;
+
+@GetMapping("/countries")
+public List<CountryDTO> myEndpoint(
+        @RequestParam(required = false) String countryName,
+        @RequestParam(required = false) String param2,
+        @RequestParam(required = false) String param3,
+        @RequestParam(required = false) String param4
+) throws IOException {
+    String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
+    List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
+
+    if (!StringUtils.isEmpty(countryName)) {
+        countryInfoDTO = filterCountriesByName(countryInfoDTO, countryName);
+    }
+
+    return countryInfoDTO;
+}
+
+private List<CountryDTO> filterCountriesByName(List<CountryDTO> countries, String filter) {
+    return countries.stream()
+            .filter(country -> country.getName() != null && country.getName().getCommon() != null &&
+                    country.getName().getCommon().toLowerCase().contains(filter.toLowerCase()))
+            .collect(Collectors.toList());
+}
+In this version of the code, the filterCountriesByName function now uses Java streams to filter the list of countries based on the provided name. The filter method of the stream is used to apply the filtering condition, and the collect method is used to collect the filtered countries into a new list.
+
+Using streams can make the code more concise and expressive, but keep in mind that it might not necessarily be more efficient for small lists. For larger lists, stream processing might offer better performance due to its potential for parallel processing.
+
+
+
+
+User
+can you refactor code, don't want to have it inside controller
+ChatGPT
+Of course, you can refactor the filtering logic into a separate utility class to keep your codebase more organized. Here's how you can do that:
+
+Create a utility class named CountryFilterUtil:
+java
+Copy code
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class CountryFilterUtil {
+
+    public static List<CountryDTO> filterCountriesByName(List<CountryDTO> countries, String filter) {
+        return countries.stream()
+                .filter(country -> country.getName() != null && country.getName().getCommon() != null &&
+                        country.getName().getCommon().toLowerCase().contains(filter.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+}
+Update your controller to use the utility class:
+java
+Copy code
+@GetMapping("/countries")
+public List<CountryDTO> myEndpoint(
+        @RequestParam(required = false) String countryName,
+        @RequestParam(required = false) String param2,
+        @RequestParam(required = false) String param3,
+        @RequestParam(required = false) String param4
+) throws IOException {
+    String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
+    List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
+
+    if (!StringUtils.isEmpty(countryName)) {
+        countryInfoDTO = CountryFilterUtil.filterCountriesByName(countryInfoDTO, countryName);
+    }
+
+    return countryInfoDTO;
+}
+By encapsulating the filtering logic in a separate utility class, you keep your code modular and maintainable. This also allows for potential reuse of the filtering logic in other parts of your application if needed.
+
+
+
+
+User
+lets have a service, it's bad practice to use static methods
+ChatGPT
+Absolutely, using static methods can make your code less testable and harder to maintain. Let's refactor the code to use a service class for handling the filtering logic.
+
+Create a service interface named CountryService:
+java
+Copy code
+import java.util.List;
+
+public interface CountryService {
+
+    List<CountryDTO> filterCountriesByName(List<CountryDTO> countries, String filter);
+}
+Implement the service in a class named CountryServiceImpl:
+java
+Copy code
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class CountryServiceImpl implements CountryService {
+
+    @Override
+    public List<CountryDTO> filterCountriesByName(List<CountryDTO> countries, String filter) {
+        return countries.stream()
+                .filter(country -> country.getName() != null && country.getName().getCommon() != null &&
+                        country.getName().getCommon().toLowerCase().contains(filter.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+}
+Inject the service into your controller:
+java
+Copy code
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.util.List;
+
+@RestController
+public class CountryController {
+
+    private final CountryService countryService;
+
+    @Autowired
+    public CountryController(CountryService countryService) {
+        this.countryService = countryService;
+    }
+
+    @GetMapping("/countries")
+    public List<CountryDTO> myEndpoint(
+            @RequestParam(required = false) String countryName,
+            @RequestParam(required = false) String param2,
+            @RequestParam(required = false) String param3,
+            @RequestParam(required = false) String param4
+    ) throws IOException {
+        String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
+        List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
+
+        if (countryName != null && !countryName.isEmpty()) {
+            countryInfoDTO = countryService.filterCountriesByName(countryInfoDTO, countryName);
+        }
+
+        return countryInfoDTO;
+    }
+}
+By using a service class and dependency injection, you ensure that your code adheres to better practices, making it more testable, maintainable, and modular.
+
+
+
+
+User
+Do i need spring annotation in service interface?
+ChatGPT
+No, you don't need Spring annotations in the service interface itself. Spring annotations are used to define the behavior of Spring-managed components, such as classes that are marked as controllers, services, repositories, and so on. Interfaces, on the other hand, generally don't require these annotations.
+
+In the example I provided earlier, the @Service annotation is used on the implementation class (CountryServiceImpl) to indicate that it's a Spring-managed service component. The interface (CountryService) doesn't require Spring annotations.
+
+To summarize:
+
+Service Interface (CountryService): No Spring annotations are needed.
+Service Implementation (CountryServiceImpl): Use the @Service annotation to mark it as a Spring-managed service component.
+This separation allows you to define the contract (interface) separately from its implementation and allows Spring to manage and inject the implementation where needed.
