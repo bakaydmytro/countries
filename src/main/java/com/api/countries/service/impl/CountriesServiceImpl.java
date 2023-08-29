@@ -5,6 +5,8 @@ import com.api.countries.service.CountriesService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,5 +34,26 @@ public class CountriesServiceImpl implements CountriesService {
         }
 
         return filteredCountries;
+    }
+
+    @Override
+    public List<CountryDTO> sortCountriesByName(List<CountryDTO> countryList, String sortOrder) {
+        Comparator<CountryDTO> comparator = (country1, country2) -> {
+            String name1 = country1.getName().getCommon();
+            String name2 = country2.getName().getCommon();
+
+            if ("ascend".equalsIgnoreCase(sortOrder)) {
+                return name1.compareTo(name2);
+            } else if ("descend".equalsIgnoreCase(sortOrder)) {
+                return name2.compareTo(name1);
+            } else {
+                throw new IllegalArgumentException("Invalid sort order. Use 'ascend' or 'descend'.");
+            }
+        };
+
+        List<CountryDTO> sortedList = new ArrayList<>(countryList);
+        Collections.sort(sortedList, comparator);
+
+        return sortedList;
     }
 }

@@ -27,7 +27,7 @@ public class CountriesController {
     public List<CountryDTO> myEndpoint(
             @RequestParam(required = false) String countryName,
             @RequestParam(required = false) Integer populationThreshold,
-            @RequestParam(required = false) String param3,
+            @RequestParam(required = false) String sort,
             @RequestParam(required = false) String param4
     ) throws IOException {
         String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
@@ -39,6 +39,10 @@ public class CountriesController {
 
         if (populationThreshold != null) {
             countryInfoDTO = countriesService.filterCountriesByPopulation(countryInfoDTO, populationThreshold);
+        }
+
+        if (sort != null) {
+            countryInfoDTO = countriesService.sortCountriesByName(countryInfoDTO, sort);
         }
 
         return countryInfoDTO;
