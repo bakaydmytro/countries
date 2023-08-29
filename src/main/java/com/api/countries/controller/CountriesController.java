@@ -28,7 +28,7 @@ public class CountriesController {
             @RequestParam(required = false) String countryName,
             @RequestParam(required = false) Integer populationThreshold,
             @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String param4
+            @RequestParam(required = false) Integer limit
     ) throws IOException {
         String response = APIClient.makeGetRequest(REST_COUNTRIES_URL);
         List<CountryDTO> countryInfoDTO = countryMapper.mapJsonToCountryList(response);
@@ -43,6 +43,10 @@ public class CountriesController {
 
         if (sort != null) {
             countryInfoDTO = countriesService.sortCountriesByName(countryInfoDTO, sort);
+        }
+
+        if (limit != null && limit > 0) {
+            countryInfoDTO = countryInfoDTO.subList(0, Math.min(limit, countryInfoDTO.size()));
         }
 
         return countryInfoDTO;
