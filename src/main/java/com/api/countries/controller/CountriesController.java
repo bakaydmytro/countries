@@ -46,7 +46,7 @@ public class CountriesController {
         }
 
         if (limit != null && limit > 0) {
-            countryInfoDTO = countryInfoDTO.subList(0, Math.min(limit, countryInfoDTO.size()));
+            countryInfoDTO = countriesService.applyCountryLimit(countryInfoDTO, limit);
         }
 
         return countryInfoDTO;

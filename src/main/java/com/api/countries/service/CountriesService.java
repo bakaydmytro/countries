@@ -11,4 +11,6 @@ public interface CountriesService {
     List<CountryDTO> filterCountriesByPopulation(List<CountryDTO> countryInfoDTO, Integer populationThreshold);
 
     List<CountryDTO> sortCountriesByName(List<CountryDTO> countryList, String sortOrder);
+
+    List<CountryDTO> applyCountryLimit(List<CountryDTO> countries, int limit);
 }

@@ -54,4 +54,9 @@ public class CountriesServiceImpl implements CountriesService {
 
         return sortedList;
     }
+
+    @Override
+    public List<CountryDTO> applyCountryLimit(List<CountryDTO> countries, int limit) {
+        return countries.subList(0, Math.min(limit, countries.size()));
+    }
 }
