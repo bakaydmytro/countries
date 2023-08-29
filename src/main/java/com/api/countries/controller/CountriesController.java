@@ -26,7 +26,7 @@ public class CountriesController {
     @GetMapping("/countries")
     public List<CountryDTO> myEndpoint(
             @RequestParam(required = false) String countryName,
-            @RequestParam(required = false) String param2,
+            @RequestParam(required = false) Integer populationThreshold,
             @RequestParam(required = false) String param3,
             @RequestParam(required = false) String param4
     ) throws IOException {
@@ -35,6 +35,10 @@ public class CountriesController {
 
         if (countryName != null && !countryName.isEmpty()) {
             countryInfoDTO = countriesService.filterCountriesByName(countryInfoDTO, countryName);
+        }
+
+        if (populationThreshold != null) {
+            countryInfoDTO = countriesService.filterCountriesByPopulation(countryInfoDTO, populationThreshold);
         }
 
         return countryInfoDTO;
