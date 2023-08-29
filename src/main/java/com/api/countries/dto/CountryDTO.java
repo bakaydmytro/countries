@@ -6,7 +6,7 @@ import java.util.List;
 
 @Data
 public class CountryDTO {
-
+    private CountryName name;
     private List<String> capital;
     private String region;
     private String subregion;
