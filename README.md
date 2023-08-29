@@ -1,2 +1,2 @@
-# countries
+# Countries
 Generative AI test project
