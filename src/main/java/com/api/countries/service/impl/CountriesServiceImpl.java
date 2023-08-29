@@ -5,10 +5,8 @@ import com.api.countries.service.CountriesService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CountriesServiceImpl implements CountriesService {
@@ -19,7 +17,7 @@ public class CountriesServiceImpl implements CountriesService {
         return countries.stream()
                 .filter(country -> country.getName() != null && country.getName().getCommon() != null &&
                         country.getName().getCommon().toLowerCase().contains(filter.toLowerCase()))
-                .collect(Collectors.toList());
+                .toList();
 
     }
 
@@ -52,7 +50,7 @@ public class CountriesServiceImpl implements CountriesService {
         };
 
         List<CountryDTO> sortedList = new ArrayList<>(countryList);
-        Collections.sort(sortedList, comparator);
+        sortedList.sort(comparator);
 
         return sortedList;
     }

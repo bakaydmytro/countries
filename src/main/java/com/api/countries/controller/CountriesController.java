@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 public class CountriesController {
 
-    private final static String REST_COUNTRIES_URL = "https://restcountries.com/v3.1/all";
+    private static final String REST_COUNTRIES_URL = "https://restcountries.com/v3.1/all";
     @Autowired
     private CountryMapper countryMapper;
 
