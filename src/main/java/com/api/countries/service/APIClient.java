@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class APIClient {
 
-    private APIClient(){}
+    private APIClient() {}
 
     public static String makeGetRequest(String url) throws IOException {
         URL apiUrl = new URL(url);

@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class CountryName {
+
     private String common;
 }
